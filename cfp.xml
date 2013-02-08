@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<stuff>
+
+<select>
+	<expression>
+		<header>
+			<name>col1</name>
+			<dbnum>1</dbnum>
+			<type>TEXT</type>
+		</header>
+		<operator>!=</operator>
+		<value>asdf</value>
+	</expression>
+	<expression>
+		<header>
+			<name>col2</name>
+			<dbnum>1</dbnum>
+			<type>NUMERIC</type>
+		</header>
+		<operator>&gt;</operator>
+		<value>10</value>
+	</expression>
+	<expression>
+		<header>
+			<name>col3</name>
+			<dbnum>1</dbnum>
+			<type>BOOLEAN</type>
+		</header>
+		<operator>=</operator>
+		<value>0</value>
+	</expression>
+
+
+	<expression>
+		<header>
+			<name>col1</name>
+			<dbnum>2</dbnum>
+			<type>TEXT</type>
+		</header>
+		<operator>!=</operator>
+		<value>asdf</value>
+	</expression>
+	<expression>
+		<header>
+			<name>col2</name>
+			<dbnum>2</dbnum>
+			<type>NUMERIC</type>
+		</header>
+		<operator>&gt;</operator>
+		<value>10</value>
+	</expression>
+	<expression>
+		<header>
+			<name>col3</name>
+			<dbnum>2</dbnum>
+			<type>BOOLEAN</type>
+		</header>
+		<operator>=</operator>
+		<value>0</value>
+	</expression>
+
+
+</select>
+
+<block>
+	<header>
+		<name>col1</name>
+		<dbnum>1</dbnum>
+		<type>TEXT</type>
+	</header>
+	<header>
+		<name>col1</name>
+		<dbnum>2</dbnum>
+		<type>TEXT</type>
+	</header>
+	<line>
+		<function>FIRST</function>
+		<param>5</param>
+	</line>
+</block>
+
+</stuff>

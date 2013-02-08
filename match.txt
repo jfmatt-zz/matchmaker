@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<match>
+	<header>
+		<name>col1</name>
+		<dbnum>1</dbnum>
+		<type>TEXT</type>
+	</header>
+	<header>
+		<name>col1</name>
+		<dbnum>2</dbnum>
+		<type>TEXT</type>
+	</header>
+	
+	<line>
+		<function>EXACT</function>
+	</line>
+</match>

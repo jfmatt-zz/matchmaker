@@ -1,0 +1,229 @@
+package matchmaker;
+
+import java.applet.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.filechooser.*;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Date;
+
+public class UploadApplet extends JApplet implements ActionListener, UploadListener {
+	static final long serialVersionUID = 1L;
+	
+	final String LOG_FILE = "C:/Users/James/Desktop/log.txt";	
+	BufferedWriter log;
+
+	final String[] FILENAMES = {"db1", "db2", "commands"};
+	final int NUM_STEPS = 5;
+	
+	//For 'login' interface:
+	JLabel instructionsLabel;
+	JTextField idField;
+	JButton checkIdButton;
+	JButton newIdButton;
+	
+	JButton devButton;
+	
+	//For main interface:
+	File[] files = new File[3];
+	JFileChooser[] jfcs = new JFileChooser[3];
+	JLabel uploadLabel;
+	JLabel[] statusLabels = new JLabel[3];
+	JLabel[] fNameLabels = new JLabel[3];
+	JButton[] chooseButtons = new JButton[3];
+	JButton[] uploadButtons = new JButton[3];
+	JLabel[] commandStrings = new JLabel[NUM_STEPS];
+	JButton[] commandButtons = new JButton[NUM_STEPS];
+	JButton[] dlButtons = new JButton[NUM_STEPS];
+	
+	String id;
+	
+	public void init() {
+
+		//Prepare log file
+		FileWriter l = null;
+		try {
+			l = new FileWriter(LOG_FILE);
+		} catch(IOException e) {e.printStackTrace();}
+		log = new BufferedWriter(l);
+		UploadThread t = null;
+		/*try {
+			t = new UploadThread(new File("C:/Users/James/Desktop/bigtest.csv"), "http://localhost:8080/MatchmakerWeb/MatchmakerServlet", "0", log);
+			t.addUploadListener(this);
+			t.start();
+		}catch(IOException e) {}*/
+		
+		//Set up first page of UI
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					setUpFirstUI();					
+				}
+			});
+		} catch(Exception e) {e.printStackTrace();}
+		
+	}
+
+	public void actionPerformed(ActionEvent event) {
+
+		if (event.getSource() == devButton)
+			try {
+				setUpMainUI();				
+			}catch(Exception e) { e.printStackTrace(); }
+	}
+
+	//Handle updates when upload threads are done
+	public void uploadEventPerformed(UploadEvent event) {
+		System.out.println(event.getMessage());
+		
+	}
+
+	//Gets first page of UI ready - this is the page that asks for user id
+	public void setUpFirstUI() {
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			this.setSize(350, 325);
+			this.setLayout(new FlowLayout());
+			
+			instructionsLabel = new JLabel();
+			instructionsLabel.setText("Please input your user ID if you have one. Otherwise, click 'Generate New ID.'");
+			idField = new JTextField();
+			idField.setColumns(20);
+			checkIdButton = new JButton("Check ID");
+			newIdButton = new JButton("Generate New ID");
+			devButton = new JButton("dev");
+				devButton.addActionListener(this);
+			add(instructionsLabel);
+			add(idField);
+			add(checkIdButton);
+			add(newIdButton);
+			add(devButton);
+			getContentPane().setVisible(true);
+			repaint();
+		} catch(Exception e) {e.printStackTrace();}
+		
+	}
+
+	//Gets second page of UI ready - main application controls
+	public void setUpMainUI() {
+		System.out.println(SwingUtilities.isEventDispatchThread());
+		try {
+			Container pane = getContentPane();
+			
+			//Clear everything
+			pane.removeAll();
+			
+			//Get layout ready
+			GroupLayout layout = new GroupLayout(pane);
+			pane.setLayout(layout);
+			layout.setAutoCreateGaps(true);
+			layout.setAutoCreateContainerGaps(true);
+
+			//We'll be doing this in chunks to allow loops to make it easier
+			GroupLayout.ParallelGroup[] uploadTallGroups = new GroupLayout.ParallelGroup[4];
+			GroupLayout.ParallelGroup[] uploadWideGroups = new GroupLayout.ParallelGroup[3];
+			GroupLayout.ParallelGroup[] commandTallGroups = new GroupLayout.ParallelGroup[3];
+			GroupLayout.ParallelGroup[] commandWideGroups = new GroupLayout.ParallelGroup[NUM_STEPS];
+			for (int i = 0; i < 4; i++)
+				uploadTallGroups[i] = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
+			for (int i = 0; i < 3; i++)
+				commandTallGroups[i] = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
+			
+			//Set up new components
+			for (int i = 0; i < 3; i++) {
+				chooseButtons[i] = new JButton("Browse...");
+				uploadButtons[i] = new JButton("Upload");
+				uploadButtons[i].setEnabled(false);
+				jfcs[i] = new JFileChooser();
+				fNameLabels[i] = new JLabel("");
+				statusLabels[i] = new JLabel("Ready");
+				
+				uploadTallGroups[0].addComponent(statusLabels[i]);
+				uploadTallGroups[1].addComponent(fNameLabels[i]);
+				uploadTallGroups[2].addComponent(chooseButtons[i]);
+				uploadTallGroups[3].addComponent(uploadButtons[i]);
+				
+				uploadWideGroups[i] = layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+									.addComponent(statusLabels[i])
+									.addComponent(fNameLabels[i])
+									.addComponent(chooseButtons[i])
+									.addComponent(uploadButtons[i]);
+			}
+			for (int i = 0; i < NUM_STEPS; i++) {
+				dlButtons[i] = new JButton("Get Results");
+				commandButtons[i] = new JButton("Process");
+				dlButtons[i].setEnabled(false);
+				commandButtons[i].setEnabled(false);
+
+				commandStrings[i] = new JLabel("Step " + i + ":");
+
+				commandTallGroups[0].addComponent(commandStrings[i]);
+				commandTallGroups[1].addComponent(commandButtons[i]);
+				commandTallGroups[2].addComponent(dlButtons[i]);
+				
+				commandWideGroups[i] = layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+									.addComponent(commandStrings[i])
+									.addComponent(commandButtons[i])
+									.addComponent(dlButtons[i]);
+			}
+			
+			//Set up text, not in loops:
+			uploadLabel = new JLabel("<html><b>Upload</b>");
+			fNameLabels[0].setText("(first database)");
+			fNameLabels[1].setText("(second database)");
+			fNameLabels[2].setText("(commands file)");
+			JPanel instructionsPanel = new JPanel();
+			instructionsLabel.setText("<html>Do this thing.<br>Do another thing.<br>Do a third thing.");
+			instructionsPanel.add(instructionsLabel);
+			instructionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Instructions"));
+			
+			//Add new components to GroupLayout
+			//Horizontal:
+			GroupLayout.SequentialGroup uploadBigHoriz = layout.createSequentialGroup();
+			GroupLayout.SequentialGroup commandBigHoriz = layout.createSequentialGroup();
+			for (int i = 0; i < 4; i++)
+				uploadBigHoriz.addGroup(uploadTallGroups[i]);
+			for (int i = 0; i < 3; i++)
+				commandBigHoriz.addGroup(commandTallGroups[i]);
+			layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+					.addComponent(instructionsPanel)
+					.addComponent(uploadLabel)
+					.addGroup(uploadBigHoriz)
+					.addGroup(commandBigHoriz)
+			);
+			
+			//Vertical:
+			GroupLayout.SequentialGroup uploadBigVert = layout.createSequentialGroup();
+			GroupLayout.SequentialGroup commandBigVert = layout.createSequentialGroup();
+			for (int i = 0; i < 3; i++)
+				uploadBigVert.addGroup(uploadWideGroups[i]);
+			for (int i = 0; i < NUM_STEPS; i++)
+				commandBigVert.addGroup(commandWideGroups[i]);
+			layout.setVerticalGroup(layout.createSequentialGroup()
+					.addComponent(instructionsPanel)
+					.addComponent(uploadLabel)
+					.addGroup(uploadBigVert)
+					.addGroup(commandBigVert)
+			);
+			
+			//Be sure to show it
+			pane.setSize(layout.minimumLayoutSize(pane));
+			repaint();
+
+		} catch(Exception e) {e.printStackTrace();}
+	}
+	
+	//Stop flickering
+	public void update(Graphics g) {
+		paint(g);
+	}
+	
+	public void paint(Graphics g) {
+		super.paint(g);
+	}
+	
+}

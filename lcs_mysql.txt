@@ -1,0 +1,51 @@
+###Longest common subsequence algorithm for MySQL 5.5
+###Created by James Matthews for MatchmakerWeb
+###American University, 2011
+
+CREATE FUNCTION LCS(str1 VARCHAR(100), str2 VARCHAR(100)) RETURNS INT
+DETERMINISTIC
+lcsBody: BEGIN
+	
+	DECLARE result INT;
+	set result = 0;
+	
+	CALL lcs_helper(str1, str2, result);
+	return result;
+	
+	
+END lcsBody
+
+CREATE PROCEDURE LCS_HELPER(IN str1 VARCHAR(100), IN str2 VARCHAR(100), OUT ret INT)
+helperBody: BEGIN
+
+	DECLARE len1 INT;
+	DECLARE len2 INT;
+	DECLARE shortened1 INT;
+	DECLARE shortened2 INT;
+	DECLARE shortenedBoth INT;	
+
+	set len1 = CHARACTER_LENGTH(str1);
+	set len2 = CHARACTER_LENGTH(str2);
+	set shortened1 = 0;
+	set shortened2 = 0;
+	set shortenedBoth = 0;	
+
+	if (len1 = 0 OR len2 = 0) then
+		set ret = 0;
+		
+	elseif (RIGHT(str1,1) = RIGHT(str2,1)) then
+		CALL lcs_helper(LEFT(str1, len1 - 1), LEFT(str2, len2 - 1), shortenedBoth);
+		set ret = shortenedBoth + 1;
+
+	else
+		CALL lcs_helper(LEFT(str1, len1 - 1), str2, shortened1);
+		CALL lcs_helper(str1, LEFT(str2, len2 - 1), shortened2);
+	
+		if (shortened1 > shortened2) then
+			set ret = shortened1;
+		else
+			set ret = shortened2;
+		end if;
+	end if;
+
+END helperBody

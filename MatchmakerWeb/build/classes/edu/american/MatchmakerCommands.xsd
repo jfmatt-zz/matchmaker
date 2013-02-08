@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			targetNamespace="http://www.example.org/MatchmakerCommands"
+			xmlns:tns="http://www.example.org/MatchmakerCommands"
+			elementFormDefault="qualified">
+
+    <xs:element name="functions">
+    	<xs:complexType>
+    		<xs:sequence>
+	    		<xs:element name="select" type="tns:Select" maxOccurs="1" minOccurs="0"/>
+	    		<xs:element name="block" type="tns:Block" maxOccurs="1" minOccurs="0"/>
+	    		<xs:element name="filter" type="tns:Filter" maxOccurs="1" minOccurs="0"/>
+	    		<xs:element name="match" type="tns:Match" maxOccurs="1" minOccurs="0"/>
+			</xs:sequence>    		
+    	</xs:complexType>
+    </xs:element>
+
+
+	<xs:complexType name="Select">
+		<xs:sequence>
+			<xs:element name="command-chunk" type="tns:SelectBlock" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Block">
+		<xs:sequence>
+			<xs:element name="command-chunk" type="tns:CommandChunk"/>
+		</xs:sequence>
+	
+	</xs:complexType>
+
+	<xs:complexType name="Filter">
+		<xs:sequence>
+			<xs:element name="command-chunk" type="tns:CommandChunk" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	
+	</xs:complexType>
+
+	<xs:complexType name="Match">
+		<xs:sequence>
+			<xs:element name="command-chunk" type="tns:CommandChunk" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>	
+	</xs:complexType>
+
+	<xs:complexType name="SelectBlock">
+		<xs:all>
+			<xs:element name="header-type" type="tns:Header-type"/>
+			<xs:element name="expression" type="tns:SelectExpression"/>
+		</xs:all>
+	</xs:complexType>
+
+	<xs:complexType name="CommandChunk">
+		<xs:sequence>
+			<xs:element name="header-type" type="tns:Header-type"/>
+			<xs:element name="header" type="tns:Header"/>
+			<xs:element name="header" type="tns:Header"/>
+			<xs:element name="command" minOccurs="1" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="text" type="xs:string"/>
+						<xs:element name="param" type="xs:int" maxOccurs="1" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="SelectExpression">
+		<xs:all>
+			<xs:element name="header" type="xs:string"></xs:element>
+			<xs:element name="comparator">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="="/>
+						<xs:enumeration value="!="/>
+						<xs:enumeration value="&gt;="/>
+						<xs:enumeration value="&lt;="/>
+						<xs:enumeration value="&lt;"/>
+						<xs:enumeration value="&gt;"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="value" type="xs:string"/>
+		</xs:all>
+	</xs:complexType>
+
+	<xs:complexType name="Header">
+		<xs:all>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="dbnum">
+				<xs:simpleType>
+					<xs:restriction base="xs:int">
+						<xs:minInclusive value="1"/>
+						<xs:maxInclusive value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+
+	<xs:simpleType name="Header-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="TEXT"/>
+			<xs:enumeration value="NUMERIC"/>
+			<xs:enumeration value="BOOLEAN"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+</xs:schema>

@@ -1,0 +1,179 @@
+CREATE FUNCTION NYSIIS(v_str VARCHAR(100)) RETURNS VARCHAR(100)
+DETERMINISTIC
+nysiisBody: BEGIN
+DECLARE v_codes VARCHAR(100);
+DECLARE v_thisCode VARCHAR(3);
+DECLARE c_curr CHAR(1);
+DECLARE c_prev CHAR(1);
+DECLARE c_next CHAR(1);
+DECLARE c_next2 CHAR(2);
+DECLARE i_strLen INT;
+DECLARE i_codeLen INT;
+DECLARE i_currentIndex INT;
+DECLARE i_replacementLen INT;
+DECLARE b_changed INT;
+set v_str = LOWER(v_str);
+set i_strLen = CHARACTER_LENGTH(v_str);
+if (i_strLen <= 1) then
+return v_str;
+end if;
+beginnings: BEGIN
+set i_replacementLen = 0;		
+set v_thisCode = '';
+set b_changed = 0;
+set c_next = LEFT(v_str,1);
+if (c_next = 'k') then
+set v_thisCode = 'c';
+set b_changed = 1;
+elseif (c_next = 'e' or c_next = 'i' or c_next = 'o' or c_next = 'u') then
+set v_thisCode = 'a';
+set b_changed = 1;
+end if;
+if (b_changed = 1) then
+set i_replacementLen = 1;
+end if;
+if (i_strLen >= 2) then
+set c_next2 = LEFT(v_str,2);
+set b_changed = 0;
+if (c_next2 = 'kn') then
+set v_thisCode = 'n';
+set b_changed = 1;
+elseif (c_next2 = 'ph' or c_next2 = 'pf') then
+set v_thisCode = 'f';
+set b_changed = 1;
+elseif (c_next2 = 'wr' or c_next2 = 'rh') then
+set v_thisCode = 'r';
+set b_changed = 1;
+elseif (c_next2 = 'dg') then
+set v_thisCode = 'g';
+set b_changed = 1;
+end if;
+end if;
+if (b_changed = 1) then
+set i_replacementLen = 2;
+end if;
+if (i_strLen >= 3) then
+set b_changed = 0;
+if (LEFT(v_str,3) = 'mac') then
+set v_thisCode = 'mc';
+set b_changed = 1;
+elseif (LEFT(v_str,3) = 'sch') then
+set v_thisCode = 's';
+set b_changed = 1;
+end if;
+end if;
+if (b_changed = 1) then
+set i_replacementLen = 3;
+end if;
+END beginnings
+set v_str = CONCAT(v_thisCode, SUBSTR(v_str FROM (i_replacementLen + 1)));
+set i_strLen = CHARACTER_LENGTH(v_str);
+endings:BEGIN
+if (i_strLen < 2) then
+LEAVE endings;
+end if;		
+set v_thisCode = '';
+set c_next2 = RIGHT(v_str,2);
+if (c_next2 = 'ee' or c_next2 = 'ie' or c_next2 = 'ye') then
+set v_thisCode = 'y';
+elseif (c_next2 = 'dt') then
+set v_thisCode = 't';
+elseif (c_next2 = 'rt' or c_next2 = 'rd') then
+set v_thisCode = 'd';
+elseif (c_next2 = 'nt' or c_next2 = 'nd') then
+set v_thisCode = 'n';
+elseif (c_next2 = 'ix') then
+set v_thisCode = 'ick';
+elseif (c_next2 = 'ex') then
+set v_thisCode = 'eck';
+end if;
+if (v_thisCode != '') then
+set v_str = CONCAT(SUBSTR(v_str FROM 1 FOR (i_strLen - 2)),v_thisCode);
+set i_strLen = CHARACTER_LENGTH(v_str);
+end if;
+END endings
+set v_codes = LEFT(v_str,1);
+set i_currentIndex = 2;
+while (i_currentIndex <= i_strLen) do
+set c_prev = RIGHT(v_codes,1);
+set c_curr = SUBSTR(v_str FROM i_currentIndex FOR 1);
+set c_next = ' ';
+set c_next2 = '  ';
+if (i_currentIndex < i_strLen) then
+set c_next = SUBSTR(v_str FROM (i_currentIndex + 1) FOR 1);
+end if;
+if (i_currentIndex < i_strLen - 1) then
+set c_next2 = SUBSTR(v_str FROM (i_currentIndex + 1) FOR 2);
+end if;
+if (c_curr = 'e' or c_curr = 'i' or c_curr = 'o' or c_curr = 'u') then
+set v_thisCode = 'a';
+elseif (c_curr = 'y' and i_currentIndex < i_strLen) then
+set v_thisCode = 'a';
+elseif (c_curr = 'q') then
+set v_thisCode = 'g';
+elseif (c_curr = 'z') then
+set v_thisCode = 's';
+elseif (c_curr = 'm') then
+set v_thisCode = 'n';
+elseif (c_curr = 'k') then
+if (c_next = 'n') then
+set v_thisCode = 'n';
+set i_currentIndex = i_currentIndex + 1;
+else
+set v_thisCode = 'c';
+end if;
+elseif (c_curr = 's') then
+set v_thisCode = 's';
+if (c_next = 'h') then
+set i_currentIndex = i_currentIndex + 1;
+elseif (c_next2 = 'ch') then
+set i_currentIndex = i_currentIndex + 2;
+end if;
+elseif (c_curr = 'p' and c_next = 'h') then
+set v_thisCode = 'f';
+set i_currentIndex = i_currentIndex + 1;
+elseif (c_curr = 'g' and c_next2 = 'ht') then
+set v_thisCode = 't';
+set i_currentIndex = i_currentIndex + 2;
+elseif (c_curr = 'd' and c_next = 'g') then
+set v_thisCode = 'g';
+set i_currentIndex = i_currentIndex + 1;
+elseif (c_curr = 'w' and c_next = 'r') then
+set v_thisCode = 'r';
+set i_currentIndex = i_currentIndex + 1;
+elseif (c_curr = 'h') then
+if (!(c_prev = 'a') or !(c_next = 'a' or c_next = 'e' or c_next = 'i'
+or c_next = 'o' or c_next = 'u')) then
+set v_thisCode = '';
+else
+set v_thiscode = 'h';
+end if;
+elseif (c_prev = 'a' and c_curr = 'w') then
+set v_thisCode = '';
+else
+set v_thisCode = c_curr;
+end if;
+if (RIGHT(v_codes,1) = LEFT(v_thisCode,1)) then
+set v_codes = CONCAT(v_codes,SUBSTR(v_thisCode FROM 2));
+else
+set v_codes = CONCAT(v_codes,v_thisCode);
+end if;
+set i_currentIndex = i_currentIndex + 1;
+end while;
+set i_codeLen = CHARACTER_LENGTH(v_codes);
+if (i_codeLen >= 2 and RIGHT(v_codes,1) = 's') then
+set v_codes = SUBSTR(v_codes FROM 1 FOR (i_codeLen - 1));
+set i_codeLen = i_codeLen - 1;
+end if;
+if (i_codeLen >= 2) then
+if (RIGHT(v_codes,2) = 'ay') then
+set v_codes = CONCAT(SUBSTR(v_codes FROM 1 FOR (i_codeLen - 2)),'y');
+set i_codeLen = i_codeLen - 1;
+end if;
+end if;
+if (i_codeLen >= 2 and RIGHT(v_codes,1) = 'a') then
+set v_codes = SUBSTR(v_codes FROM 1 FOR (i_codeLen - 1));
+end if;
+return v_codes;
+END nysiisBody
+
